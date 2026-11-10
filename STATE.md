@@ -1,61 +1,45 @@
 # Current Focus & Objective
-1. **Task Completion Gratitude Support Badge & Download Flash Notification**:
-   - Implemented an authentic, non-intrusive gratitude and developer support system across Amazing-Tools:
-     1. **Download Completion Flash Toast (`.at-support-toast`)**:
-        - Listens to all client-side file downloads (`a[download]`, `#downloadResultBtn`, `#btnDownloadVideo`, `#downloadBtn`, and `AmazingTools.downloadFile()`).
-        - Gently informs the user with an animated floating notification card: *"If Amazing-Tools saved you time or added value today, consider supporting our 100% free & private platform. Even your continued use inspires us to keep building in the right direction!"*
-        - Features a 45-second cooldown timer between toasts in the same session to avoid overwhelming user during batch downloads.
-        - Supports cross-frame `postMessage` (`AMAZING_TOOLS_SHOW_SUPPORT_TOAST`) to display in top portal window when embedded in an iframe.
-     2. **Result Section Gratitude Badge (`.gratitude-result-badge`)**:
-        - Inline amber-accented badge linking to `support.html` via `target="_top"`.
-        - Embedded across key tool results:
-          - `pages/pdf-tools.html`: Inside `#resultCard` below download button.
-          - `pages/document-converter.html`: Inside `#resultSection` below download button.
-          - `pages/screen-recorder.html`: Inside `#videoResultWrap` below video preview.
-          - `pages/emi-calculator.html`: At bottom of loan prepayment schedule dashboard.
-          - `js/goal-financial-planner.js`: At bottom of life goals roadmap chart/card.
-          - `js/income-tax-calculator.js`: On tax calculation and PDF/CSV export.
-          - `js/buy-vs-rent-calculator.js`: At bottom of 30-year comparison table.
-          - Automatically attaches on all everyday tools using `AmazingTools.showResult()`.
-     3. **Heartfelt Creator Motivation Banner (`support.html`)**:
-        - Added an authentic welcome note clarifying that even if users cannot donate financially, simply using and sharing our tools fulfills the developer's emotional need and provides motivation to keep creating free tools.
+1. **Loan EMI & Prepayment Calculator Accuracy & Dynamic UI/UX Overhaul**:
+   - Fixed core calculation discrepancies where prepayment tenure reduction was displaying excessively large reductions due to a hidden ghost monthly prepayment (defaulting to ₹5,000) and missing floating rate revision arguments in isolated counterfactual simulations.
+   - Restructured Step 1 input flow so that the **First EMI Date / Month picker** is placed immediately after the **Loan Amount**, matching user expectations.
+   - Replaced abstract "Year 1, Year 2 ... Month 1, Month 2" dropdowns in both Floating Interest Rate Timeline and Custom Prepayment Scheduler with **real dynamic calendar years (e.g. 2024, 2025...) and calendar months (e.g. July, November...)** derived from the First EMI Date and Loan Tenure.
+   - Implemented exact Indian bank-standard amortization formulas where at any prepayment month, remaining tenure drop ($N_{before} - N_{after}$) is calculated accurately on active principal, current EMI, and effective floating interest rate.
+   - Added Quick 1x, 2x, 3x, 4x, 5x EMI multiplier chips directly into the prepayment scheduler.
+   - Added "Remaining Tenure" column to the full amortization schedule (both monthly & yearly views, as well as CSV export).
 
 # Architecture Context
-- `tools-website/css/styles.css`:
-  - Defined complete styles for `.gratitude-result-badge` and `.at-support-toast`.
-  - Added theme overrides for dark modes (`theme-08-graphite`, `theme-11-midnight`).
-- `tools-website/js/common.js`:
-  - Added `flashSupportToast(options)`, `getGratitudeBadgeHtml(options)`, `attachGratitudeBadge(container, options)`.
-  - Added support entry to `toolRegistry` and `openToolInPortal`.
-  - Added global download click listener and cross-frame postMessage listener.
-- `tools-website/support.html`:
-  - Added `.gratitude-welcome-banner` with creator's heartfelt motivation note.
+- `tools-website/pages/emi-calculator.html`:
+  - Relocated First EMI Date right after Loan Amount with quick presets (`This Month`, `Next Month`, `Jan Next Year`, `1 Yr Ago (Running Loan)`).
+  - Cleaned up Rate Revision selects (`newRateYear`, `newRateMonth`) with dynamic calendar timing preview.
+  - Reset default Extra Monthly EMI from 5,000 to 0 to prevent phantom deductions.
+  - Added Quick EMI Multipliers (`1x EMI`, `2x EMI`, `3x EMI`, `4x EMI`, `5x EMI`) and live date preview in Prepayment Scheduler.
+  - Updated Scheduler Table and Amortization Table headers to include Bank Tenure Reduced, Balances, and Remaining Tenure.
+- `tools-website/js/emi-calculator.js`:
+  - Added `computeBankRemainingTenure()` helper matching standard banking annuity equations.
+  - Added `updateDropdownsForLoanTiming()` populating real calendar years and months across both timeline and prepayment dropdowns.
+  - Updated `handleAddLumpsum()` and `handleAddRateRevision()` to map real calendar dates to exact loan months.
+  - Fixed `renderSchedulerTable()` to pass full rate revisions and calculate isolated bank remaining tenure reduction and lifetime interest savings.
+  - Enhanced Amortization table and CSV download with "Remaining Tenure" column.
 
 # Active Files & Dependencies
-- `tools-website/css/styles.css`
-- `tools-website/js/common.js`
-- `tools-website/support.html`
-- `tools-website/pages/pdf-tools.html`
-- `tools-website/pages/document-converter.html`
-- `tools-website/pages/screen-recorder.html`
 - `tools-website/pages/emi-calculator.html`
-- `tools-website/js/goal-financial-planner.js`
-- `tools-website/js/income-tax-calculator.js`
-- `tools-website/js/buy-vs-rent-calculator.js`
+- `tools-website/js/emi-calculator.js`
 
 # Completed Steps
-1. Created and approved comprehensive implementation plan in `implementation_plan.md`.
-2. Implemented CSS for `.at-support-toast` and `.gratitude-result-badge` with responsive and dark mode rules in `tools-website/css/styles.css`.
-3. Implemented global download interceptor, cross-frame messaging, auto-attachment in `showResult()`, and API in `tools-website/js/common.js`.
-4. Embedded the gratitude badge into `pdf-tools.html`, `document-converter.html`, `screen-recorder.html`, `emi-calculator.html`, and calculator JS engines.
-5. Enhanced `support.html` with the creator's note emphasizing emotional motivation and welcoming free usage.
+1. Investigated root causes of mathematical inflation in tenure reduction:
+   - Default `monthlyPrepay` value of ₹5,000 in HTML was running silently in background simulations.
+   - `currentParams` in `renderSchedulerTable()` was missing `rateRevisions` and `baseRate`, comparing incompatible simulations.
+2. Relocated First EMI Date to follow Loan Amount in HTML.
+3. Implemented dynamic calendar year and month generation based on First EMI date and tenure.
+4. Implemented Quick EMI multiple buttons (`1x`, `2x`, `3x`, `4x`, `5x EMI`).
+5. Implemented bank-standard remaining tenure reduction calculation formula in `renderSchedulerTable()`.
 6. Automated verification:
-   - Passed 100% of 18 automated validation checks across all target files.
-   - Captured headless Chrome screenshots of `support.html` and `emi-calculator.html`.
-   - Re-generated `.code_relation_index.json` in both `tools-website/` and root.
+   - Validated JS syntax with `node -c`.
+   - Verified user scenario (40L, 17 Yrs, 8.75%, 3x EMI in July 2025 -> exact ~11-12 months bank tenure reduction).
+   - Captured and reviewed headless Chrome visual layout screenshots.
 
 # Current Issues / Risks
-- None.
+- None. All calculations, UI dropdowns, and layouts verified.
 
 # Next Immediate Actions
-- Present concise summary and code diffs to user.
+- Present concise summary and explanations to user in clear Hindi/English.
